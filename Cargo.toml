@@ -1,0 +1,27 @@
+[package]
+name = "rispy"
+version = "0.0.1"
+edition = "2021"
+default-run = "rispy"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/takashiidobe/rispy"
+documentation = "https://docs.rs/rispy"
+description = "A shell in rust"
+
+[dependencies]
+rustyline = "9.0.0"
+man = { version = "0.3.0", optional = true }
+
+[[bin]]
+name = "man"
+path = "src/build.rs"
+required-features = ["build_deps"]
+
+[features]
+build_deps = ["man"]
+
+[profile.release]
+opt-level = "z"
+codegen-units = 1
+panic = "abort"
