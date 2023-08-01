@@ -8,7 +8,7 @@ assert() {
 
   echo "$input" > tmp.lisp
 
-  ./target/debug/rispy tmp.lisp > tmp.s || exit
+  ./target/debug/rispy tmp.lisp compile > tmp.s || exit
   gcc -static -o tmp tmp.s -z execstack
   actual=$(./tmp)
 

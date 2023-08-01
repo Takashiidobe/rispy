@@ -427,11 +427,13 @@ fn repl(env: &mut RispEnv) {
 }
 
 fn interpret(program: String, env: &mut RispEnv) {
-    match parse_eval(program, env) {
-        Ok(res) => println!("// 🔥 => {}", res),
-        Err(e) => match e {
-            RispErr::Reason(msg) => println!("// 🙀 => {}", msg),
-        },
+    for line in program.lines() {
+        match parse_eval(line.to_string(), env) {
+            Ok(res) => println!("// 🔥 => {}", res),
+            Err(e) => match e {
+                RispErr::Reason(msg) => println!("// 🙀 => {}", msg),
+            },
+        }
     }
 }
 
@@ -496,8 +498,12 @@ fn main() {
         1 => repl(env),
         2 => {
             let program = std::fs::read_to_string(arguments[1].clone()).unwrap();
+            interpret(program, env);
+        }
+        3 => {
+            let program = std::fs::read_to_string(arguments[1].clone()).unwrap();
             let _ = compile_eval(program, env);
         }
-        _ => eprintln!("Only takes up to two arguments"),
+        _ => eprintln!("Only takes up to three arguments"),
     }
 }
