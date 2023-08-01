@@ -1,27 +1,9 @@
 [package]
 name = "rispy"
-version = "0.0.2"
-edition = "2018"
-default-run = "rispy"
+version = "0.0.3"
+edition = "2021"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/takashiidobe/rispy"
+description = "A Lisp in Rust"
 documentation = "https://docs.rs/rispy"
-description = "A shell in rust"
-
-[dependencies]
-rustyline = "9.0.0"
-man = { version = "0.3.0", optional = true }
-
-[[bin]]
-name = "man"
-path = "src/build.rs"
-required-features = ["build_deps"]
-
-[features]
-build_deps = ["man"]
-
-[profile.release]
-opt-level = "z"
-codegen-units = 1
-panic = "abort"

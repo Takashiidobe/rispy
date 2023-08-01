@@ -1,6 +1,10 @@
-# Rispy 
+# Rispy
 
 A Lisp in Rust. Based off of Stepan Parunashvili's Blog post: <https://stopa.io/post/222>
+
+## Plans
+
+Have a flag in main that allows for emitting x86 assembly.
 
 ## License
 
