@@ -450,23 +450,80 @@ fn write_executable(expr: RispExp, file_name: Option<&str>) {
             .unwrap(),
     };
 
-    let program = format!(
-        r#".LC0:
-    .string	"%d\n"
-    .globl	main
+    let expr_num = match expr {
+        RispExp::Bool(true) => ExprNum::Unsigned(1),
+        RispExp::Bool(false) => ExprNum::Unsigned(0),
+        RispExp::Number(n) => {
+            if n.fract() == 0.0 {
+                ExprNum::Unsigned(n as u64)
+            } else {
+                let bits = n.to_bits();
+                let high = (bits >> 32) as u32;
+                let low = bits as u32;
+
+                ExprNum::Float(low, high)
+            }
+        }
+        RispExp::Symbol(_) | RispExp::List(_) | RispExp::Func(_) | RispExp::Lambda(_) => {
+            unreachable!()
+        }
+    };
+
+    enum ExprNum {
+        Float(u32, u32),
+        Unsigned(u64),
+    }
+
+    let program = match expr_num {
+        ExprNum::Float(low, high) => {
+            #[cfg(all(
+                target_arch = "x86_64",
+                any(target_os = "linux", target_os = "android")
+            ))]
+            format!(
+                r#".LC1:
+        .string "%f\n"
+        .globl main
 main:
-    pushq	%rbp
-    movq	%rsp, %rbp
-    movl	${}, %esi
-    movl	$.LC0, %edi
-    movl	$0, %eax
-    call	printf
-    movl	$0, %eax
-    popq	%rbp
-    ret
+        subq    $8, %rsp
+        movl    $.LC1, %edi
+        movl    $1, %eax
+        movsd   .LC0(%rip), %xmm0
+        call    printf
+        xorl    %eax, %eax
+        addq    $8, %rsp
+        ret
+.LC0:
+        .long   {}
+        .long   {}
 "#,
-        expr
-    );
+                low, high
+            )
+        }
+        ExprNum::Unsigned(num) => {
+            #[cfg(all(
+                target_arch = "x86_64",
+                any(target_os = "linux", target_os = "android")
+            ))]
+            format!(
+                r#".LC0:
+        .string "%lu\n"
+        .globl main
+main:
+        subq    $8, %rsp
+        movq    ${}, %rsi
+        movl    $.LC0, %edi
+        xorl    %eax, %eax
+        call    printf
+        xorl    %eax, %eax
+        addq    $8, %rsp
+        ret
+"#,
+                num
+            )
+        }
+    };
+
     f.write_all(program.as_bytes()).unwrap();
 }
 
@@ -480,12 +537,6 @@ fn compile_eval(program: String, env: &mut RispEnv) -> Result<(), RispErr> {
             },
         }
     }
-
-    evaled_exp = match evaled_exp {
-        RispExp::Bool(true) => RispExp::Number(1.0),
-        RispExp::Bool(false) => RispExp::Number(0.0),
-        _ => evaled_exp,
-    };
 
     write_executable(evaled_exp, None);
 
