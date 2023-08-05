@@ -130,89 +130,91 @@ macro_rules! ensure_tonicity {
     }};
 }
 
-fn default_env<'a>() -> RispEnv<'a> {
-    let mut data: HashMap<String, RispExp> = HashMap::new();
-    data.insert(
-        "+".to_string(),
-        RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
-            let floats = parse_list_of_floats(args)?;
-            if floats.len() == 1 {
-                return Ok(RispExp::Number(floats[0].abs()));
-            }
+impl Default for RispEnv<'_> {
+    fn default() -> Self {
+        let mut data: HashMap<String, RispExp> = HashMap::new();
+        data.insert(
+            "+".to_string(),
+            RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
+                let floats = parse_list_of_floats(args)?;
+                if floats.len() == 1 {
+                    return Ok(RispExp::Number(floats[0].abs()));
+                }
 
-            let sum = floats.iter().fold(0.0, |sum, a| sum + a);
+                let sum = floats.iter().fold(0.0, |sum, a| sum + a);
 
-            Ok(RispExp::Number(sum))
-        }),
-    );
-    data.insert(
-        "-".to_string(),
-        RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
-            let floats = parse_list_of_floats(args)?;
-            if floats.len() == 1 {
-                return Ok(RispExp::Number(-1.0 * floats[0]));
-            }
+                Ok(RispExp::Number(sum))
+            }),
+        );
+        data.insert(
+            "-".to_string(),
+            RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
+                let floats = parse_list_of_floats(args)?;
+                if floats.len() == 1 {
+                    return Ok(RispExp::Number(-1.0 * floats[0]));
+                }
 
-            let first = *floats
-                .first()
-                .ok_or(RispErr::Reason("expected at least one number".to_string()))?;
-            let sum_of_rest = floats[1..].iter().fold(0.0, |sum, a| sum + a);
+                let first = *floats
+                    .first()
+                    .ok_or(RispErr::Reason("expected at least one number".to_string()))?;
+                let sum_of_rest = floats[1..].iter().fold(0.0, |sum, a| sum + a);
 
-            Ok(RispExp::Number(first - sum_of_rest))
-        }),
-    );
-    data.insert(
-        "*".to_string(),
-        RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
-            let floats = parse_list_of_floats(args)?;
+                Ok(RispExp::Number(first - sum_of_rest))
+            }),
+        );
+        data.insert(
+            "*".to_string(),
+            RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
+                let floats = parse_list_of_floats(args)?;
 
-            let rest = floats.iter().fold(1.0, |sum, a| sum * a);
+                let rest = floats.iter().fold(1.0, |sum, a| sum * a);
 
-            Ok(RispExp::Number(rest))
-        }),
-    );
-    data.insert(
-        "/".to_string(),
-        RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
-            let floats = parse_list_of_floats(args)?;
+                Ok(RispExp::Number(rest))
+            }),
+        );
+        data.insert(
+            "/".to_string(),
+            RispExp::Func(|args: &[RispExp]| -> Result<RispExp, RispErr> {
+                let floats = parse_list_of_floats(args)?;
 
-            let mut total: f64 = *floats
-                .first()
-                .ok_or(RispErr::Reason("expected at least one number".to_string()))?;
+                let mut total: f64 = *floats
+                    .first()
+                    .ok_or(RispErr::Reason("expected at least one number".to_string()))?;
 
-            for float in &floats[1..] {
-                total /= float;
-            }
+                for float in &floats[1..] {
+                    total /= float;
+                }
 
-            Ok(RispExp::Number(total))
-        }),
-    );
-    data.insert(
-        "=".to_string(),
-        RispExp::Func(ensure_tonicity!(|a, b| a == b)),
-    );
-    data.insert(
-        ">".to_string(),
-        RispExp::Func(ensure_tonicity!(|a, b| a > b)),
-    );
-    data.insert(
-        ">=".to_string(),
-        RispExp::Func(ensure_tonicity!(|a, b| a >= b)),
-    );
-    data.insert(
-        "<".to_string(),
-        RispExp::Func(ensure_tonicity!(|a, b| a < b)),
-    );
-    data.insert(
-        "<=".to_string(),
-        RispExp::Func(ensure_tonicity!(|a, b| a <= b)),
-    );
-    data.insert(
-        "!=".to_string(),
-        RispExp::Func(ensure_tonicity!(|a, b| a != b)),
-    );
+                Ok(RispExp::Number(total))
+            }),
+        );
+        data.insert(
+            "=".to_string(),
+            RispExp::Func(ensure_tonicity!(|a, b| a == b)),
+        );
+        data.insert(
+            ">".to_string(),
+            RispExp::Func(ensure_tonicity!(|a, b| a > b)),
+        );
+        data.insert(
+            ">=".to_string(),
+            RispExp::Func(ensure_tonicity!(|a, b| a >= b)),
+        );
+        data.insert(
+            "<".to_string(),
+            RispExp::Func(ensure_tonicity!(|a, b| a < b)),
+        );
+        data.insert(
+            "<=".to_string(),
+            RispExp::Func(ensure_tonicity!(|a, b| a <= b)),
+        );
+        data.insert(
+            "!=".to_string(),
+            RispExp::Func(ensure_tonicity!(|a, b| a != b)),
+        );
 
-    RispEnv { data, outer: None }
+        RispEnv { data, outer: None }
+    }
 }
 
 fn parse_list_of_floats(args: &[RispExp]) -> Result<Vec<f64>, RispErr> {
@@ -370,7 +372,6 @@ fn eval(exp: &RispExp, env: &mut RispEnv) -> Result<RispExp, RispErr> {
         }
         RispExp::Bool(_a) => Ok(exp.clone()),
         RispExp::Number(_a) => Ok(exp.clone()),
-
         RispExp::List(list) => {
             let first_form = list
                 .first()
@@ -439,7 +440,6 @@ fn interpret(program: String, env: &mut RispEnv) {
 
 fn write_executable(expr: RispExp, file_name: Option<&str>) {
     use std::fs::File;
-    use std::os::unix::prelude::PermissionsExt;
 
     let mut f = match file_name {
         Some(name) => File::options().create(true).write(true).open(name).unwrap(),
@@ -450,10 +450,6 @@ fn write_executable(expr: RispExp, file_name: Option<&str>) {
             .unwrap(),
     };
 
-    let mut perms = f.metadata().unwrap().permissions();
-    perms.set_mode(0o755);
-
-    f.set_permissions(perms).unwrap();
     let program = format!(
         r#".LC0:
     .string	"%d\n"
@@ -474,35 +470,44 @@ main:
     f.write_all(program.as_bytes()).unwrap();
 }
 
-fn compile_eval(expr: String, env: &mut RispEnv) -> Result<(), RispErr> {
-    let (parsed_exp, _) = parse(&tokenize(expr))?;
-    let evaled_exp = eval(&parsed_exp, env)?;
+fn compile_eval(program: String, env: &mut RispEnv) -> Result<(), RispErr> {
+    let mut evaled_exp = RispExp::Bool(true);
+    for line in program.lines() {
+        match parse_eval(line.to_string(), env) {
+            Ok(res) => evaled_exp = res,
+            Err(e) => match e {
+                RispErr::Reason(msg) => panic!("// 🙀 => {}", msg),
+            },
+        }
+    }
 
-    // cast bools to numbers
-    let compiled_exp = match evaled_exp {
+    evaled_exp = match evaled_exp {
         RispExp::Bool(true) => RispExp::Number(1.0),
         RispExp::Bool(false) => RispExp::Number(0.0),
         _ => evaled_exp,
     };
 
-    write_executable(compiled_exp, None);
+    write_executable(evaled_exp, None);
 
     Ok(())
 }
 
 fn main() {
     use std::env::args;
+    use std::fs::read_to_string;
+
     let arguments: Vec<_> = args().collect();
-    let env = &mut default_env();
+    let mut env = RispEnv::default();
+
     match arguments.len() {
-        1 => repl(env),
+        1 => repl(&mut env),
         2 => {
-            let program = std::fs::read_to_string(arguments[1].clone()).unwrap();
-            interpret(program, env);
+            let program = read_to_string(arguments[1].clone()).unwrap();
+            interpret(program, &mut env);
         }
         3 => {
-            let program = std::fs::read_to_string(arguments[1].clone()).unwrap();
-            let _ = compile_eval(program, env);
+            let program = read_to_string(arguments[1].clone()).unwrap();
+            let _ = compile_eval(program, &mut env);
         }
         _ => eprintln!("Only takes up to three arguments"),
     }

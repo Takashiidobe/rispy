@@ -52,6 +52,12 @@ assert 1 '(>= 1 0)'
 assert 1 '(>= 1 1)'
 assert 0 '(>= 1 2)'
 
+for f in $(find ./tests -name "*.lisp"); do
+  program=$(cat "$f")
+  result=$(cat "$f.expect")
+  assert $result "$program"
+done
+
 rm -f tmp.lisp tmp.res tmp.s tmp
 
 echo OK
