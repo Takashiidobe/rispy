@@ -438,6 +438,10 @@ fn interpret(program: String, env: &mut RispEnv) {
     }
 }
 
+#[cfg(all(
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "android")
+))]
 fn write_executable(expr: RispExp, file_name: Option<&str>) {
     use std::fs::File;
 
@@ -527,6 +531,10 @@ main:
     f.write_all(program.as_bytes()).unwrap();
 }
 
+#[cfg(all(
+    target_arch = "x86_64",
+    any(target_os = "linux", target_os = "android")
+))]
 fn compile_eval(program: String, env: &mut RispEnv) -> Result<(), RispErr> {
     let mut evaled_exp = RispExp::Bool(true);
     for line in program.lines() {
@@ -565,6 +573,10 @@ fn main() {
                 let program = read_to_string(arguments[1].clone()).unwrap();
                 let _ = compile_eval(program, &mut env);
             }
+            #[cfg(not(all(
+                target_arch = "x86_64",
+                any(target_os = "linux", target_os = "android")
+            )))]
             panic!("Compilation is only supported on x86_64 linux");
         }
         _ => eprintln!("Only takes up to three arguments"),
