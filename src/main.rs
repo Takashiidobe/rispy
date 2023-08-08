@@ -557,8 +557,15 @@ fn main() {
             interpret(program, &mut env);
         }
         3 => {
-            let program = read_to_string(arguments[1].clone()).unwrap();
-            let _ = compile_eval(program, &mut env);
+            #[cfg(all(
+                target_arch = "x86_64",
+                any(target_os = "linux", target_os = "android")
+            ))]
+            {
+                let program = read_to_string(arguments[1].clone()).unwrap();
+                let _ = compile_eval(program, &mut env);
+            }
+            panic!("Compilation is only supported on x86_64 linux");
         }
         _ => eprintln!("Only takes up to three arguments"),
     }
